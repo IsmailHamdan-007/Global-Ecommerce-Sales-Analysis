@@ -178,6 +178,71 @@ SELECT *
 FROM customer_ranks
 WHERE Ranks <= 3;
 
+-- 15.Find Consecutive Monthly Revenue Growth.
+WITH MRG AS (
+	SELECT 
+		MONTH(Order_Date) AS Months,
+		SUM(Total_Sales) AS Revenue	
+	FROM Global_sales
+	GROUP BY MONTH(Order_Date)
+	)
+SELECT 
+	Months,
+	Revenue,
+	LAG(Revenue) OVER(
+			ORDER BY Months) AS Previous_Sales,
+			CASE
+			WHEN Revenue > LAG(Revenue) OVER(ORDER BY Months)
+			THEN 'GROWTH'
+			ELSE 'NO GROWTH'
+			END AS Growth_STATUS
+FROM MRG;
+
+-- 16. Find Top-Selling Product Per Region.
+WITH TopSellings AS (
+	SELECT 
+		Product_Name,
+		SUM(Total_Sales) AS Sales,
+		Region,
+		RANK() OVER(
+			PARTITION BY Region
+			ORDER BY SUM(Total_Sales) DESC) AS ranks
+	FROM Global_sales
+	GROUP BY Product_Name,Region
+	)
+SELECT *
+FROM TopSellings
+WHERE ranks = 1;
+
+-- 17.Find Revenue Share of Each Product.
+WITH Revenue_Share AS (
+	SELECT 
+		Product_Name,
+		SUM(Total_Sales) AS Product_revenue,
+		SUM(SUM(Total_Sales)) OVER() AS total_revenue
+	FROM Global_sales
+	GROUP BY Product_Name
+	)
+SELECT 
+	Product_Name,
+	Product_revenue,
+	(Product_revenue * 100.00)/ Product_revenue
+	AS Revenue_Share
+FROM Revenue_Share;
+
+-- 18.Find Running Average Sales.
+WITH avg_sales AS (
+	SELECT 
+	MONTH(Order_Date) AS months,
+	SUM(Total_Sales) AS Sales
+	FROM Global_sales
+	GROUP BY MONTH(Order_Date)
+	)
+SELECT 
+	months,
+	AVG(Sales) OVER(
+	ORDER BY months ASC) AS avg_sales
+FROM avg_sales;
 
 
 
