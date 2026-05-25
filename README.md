@@ -45,3 +45,98 @@ Global-Ecommerce-Sales-Analysis/
 │   └── GlobalEcommerce.pbix
 │
 └── README.md
+
+📊 SQL Concepts Used
+✅ Data Cleaning
+Handling NULL values
+Removing duplicates
+Data type conversion
+String cleaning using TRIM()
+Data standardization
+
+✅ SQL Analysis Concepts
+GROUP BY
+ORDER BY
+HAVING
+Aggregate Functions
+Date Functions
+
+✅ Advanced SQL
+Common Table Expressions (CTEs)
+Subqueries
+Window Functions
+CASE WHEN
+Ranking Functions
+Running Totals
+LAG() & LEAD()
+📈 Power BI Dashboard Pages
+1️⃣ Executive Dashboard
+
+This dashboard provides a high-level overview of:
+
+Total Sales
+Total Profit
+Total Orders
+Regional Sales Performance
+Monthly Sales Trends
+2️⃣ Customer Analytics Dashboard
+
+This dashboard focuses on:
+
+Customer Segmentation
+Customer Revenue Analysis
+Top Customers
+Regional Customer Distribution
+Order Analysis
+3️⃣ Product Analytics Dashboard
+
+This dashboard analyzes:
+
+Product Revenue
+Product Profitability
+Category Performance
+Quantity Sold
+Top Performing Products
+4️⃣ Profitability Dashboard
+
+This dashboard provides insights into:
+
+Profit Trends
+Profit by Region
+Discount Impact on Profit
+Shipping Cost Analysis
+Loss-Making Products
+
+📌 Key Business Insights
+Furniture category generated the highest revenue.
+Europe region produced the highest overall profit.
+Some high-discount products resulted in lower profitability.
+Top-selling products contributed a major share of total revenue.
+Customer segments showed different purchasing behaviors across regions.
+
+🎯 Project Objectives
+Perform real-world ecommerce sales analysis
+Practice advanced SQL concepts
+Build interactive Power BI dashboards
+Generate business-driven insights
+Develop a strong data analyst portfolio project
+
+🚀 Future Improvements
+Add DAX measures for advanced analytics
+Build forecasting visuals
+Add drill-through reports
+Create normalized relational tables
+Deploy dashboards online.
+
+
+
+
+
+
+
+
+
+
+
+
+
