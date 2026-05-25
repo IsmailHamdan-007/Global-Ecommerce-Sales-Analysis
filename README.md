@@ -79,28 +79,25 @@ Total Profit
 Total Orders
 Regional Sales Performance
 Monthly Sales Trends
+
 2️⃣ Customer Analytics Dashboard
-
 This dashboard focuses on:
-
 Customer Segmentation
 Customer Revenue Analysis
 Top Customers
 Regional Customer Distribution
 Order Analysis
+
 3️⃣ Product Analytics Dashboard
-
 This dashboard analyzes:
-
 Product Revenue
 Product Profitability
 Category Performance
 Quantity Sold
 Top Performing Products
+
 4️⃣ Profitability Dashboard
-
 This dashboard provides insights into:
-
 Profit Trends
 Profit by Region
 Discount Impact on Profit
