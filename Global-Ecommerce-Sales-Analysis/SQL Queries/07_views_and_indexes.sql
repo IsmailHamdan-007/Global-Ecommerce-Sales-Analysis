@@ -15,21 +15,6 @@ GROUP BY C.Customer_Name;
 SELECT * FROM vw_top_customers;
 
 -- 2. Regional Revenue View.
-CREATE VIEW customers_revenue_view AS
-SELECT 
-	C.Customer_ID,
-	C.Customer_Name,
-	SUM(S.Total_Sales) AS total_revenue,
-	SUM(S.Profit) AS total_profit
-FROM Customers C
-INNER JOIN Orders O
-ON C.Customer_ID = O.Customer_ID
-INNER JOIN Sales S
-ON O.Order_ID = S.Order_ID
-GROUP BY C.Customer_ID, C.Customer_Name;
-
-SELECT * FROM customers_revenue_view;
-
 CREATE VIEW regional_revenue_views AS 
 SELECT 
 	C.Region,
@@ -174,3 +159,56 @@ ON O.Order_ID = S.Order_ID
 GROUP BY C.Region;
 
 SELECT * FROM executive_summary_view;
+
+-- 11.Top 10 customers by revenue.
+SELECT TOP 10 Customer_Name,Revenue FROM vw_top_customers
+ORDER BY Revenue DESC;
+
+-- 12.Top 5 products by profit.
+SELECT TOP 5 
+	Product_Name,
+	SUM(profit) AS Profits
+FROM prod_profits
+GROUP BY Product_Name
+ORDER BY Profits DESC;
+
+-- 13.Regions contributing more than 20% of total revenue.
+WITH region_share AS
+(
+	SELECT 
+		Region,
+		SUM(total_sales) AS Revenue
+FROM regional_revenue_views
+GROUP BY Region
+),
+region_pert AS
+(
+SELECT 
+	Region,
+	Revenue,
+	ROUND(
+		Revenue * 100.00 /
+		 SUM(Revenue) OVER(), 2) AS cont_pert
+FROM region_share
+)
+SELECT *
+FROM region_pert
+WHERE cont_pert > 20;
+
+-- 14.Highest revenue month.
+SELECT 
+	months,
+	years,
+	SUM(revenue) AS highest_revenue
+FROM monthly_revenue_view
+GROUP BY months, years
+ORDER BY highest_revenue DESC;
+
+
+
+
+
+
+
+
+
