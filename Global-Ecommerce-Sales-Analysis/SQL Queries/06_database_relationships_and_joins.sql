@@ -219,6 +219,39 @@ ON O.Order_ID = S.Order_ID
 GROUP BY C.Customer_ID, C.Customer_Name
 ORDER BY CLV DESC;
 
+-- 17.Repeat Customer Analysis.
+SELECT 
+	C.Customer_ID,
+	C.Customer_Name,
+	COUNT(O.Order_ID) AS cust_counts
+FROM Customers C
+INNER JOIN Orders O
+ON C.Customer_ID = O.Customer_ID
+GROUP BY C.Customer_ID,C.Customer_Name
+ORDER BY cust_counts DESC;
+
+-- 18.Revenue Contribution Percentage.
+SELECT
+	P.Product_Category,
+	SUM(S.Total_Sales) AS revenue,
+	ROUND(SUM(S.Total_Sales) * 100.00 / SUM(SUM(S.Total_Sales)) OVER(), 2) AS Rvenue_share
+FROM Products P
+INNER JOIN Sales S
+ON P.Product_ID = S.Product_ID
+GROUP BY P.Product_Category;
+
+-- 19.Product Profit Margin Analysis.
+SELECT
+	P.Product_Name,
+	P.Product_Category,
+	SUM(S.Total_Sales) AS revenue,
+	ROUND(SUM(S.Profit) * 100.00 / SUM(S.Total_Sales), 2) AS product_margin
+FROM Products P 
+INNER JOIN Sales S
+ON p.Product_ID = S.Product_ID
+GROUP BY P.Product_Name, P.Product_Category;
+
+
 
 
 
