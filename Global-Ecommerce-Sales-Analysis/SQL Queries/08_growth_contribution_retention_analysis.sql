@@ -274,3 +274,220 @@ SELECT TOP 1
 		Prev_Month_Profits, 2) AS Gorwth_Pert
 FROM Monthly_Prof_Pert
 ORDER BY Gorwth_Pert DESC;
+
+-- ==========================================================
+-- QUARTERLY ANALYSIS
+-- ==========================================================
+
+-- 21. Find Quarterly Revenue
+SELECT 
+	YEAR(Order_Date) AS Years,
+	DATEPART(QUARTER, Order_Date) AS Quarters,
+	SUM(Total_Sales) AS Revenue
+FROM Global_sales
+GROUP BY YEAR(Order_Date),DATEPART(QUARTER, Order_Date)
+ORDER BY Years, Quarters;
+
+-- 22. Find Quarterly Profit
+SELECT 
+	YEAR(Order_Date) AS Years,
+	DATEPART(QUARTER, Order_Date) AS Quarters,
+	SUM(Profit) AS Profits
+FROM Global_sales
+GROUP BY YEAR(Order_Date),DATEPART(QUARTER, Order_Date)
+ORDER BY Years, Quarters;
+
+-- 23. Find Previous Quarter Revenue using LAG()
+SELECT 
+	YEAR(Order_Date) AS Years,
+	DATEPART(QUARTER, Order_Date) AS Quarters,
+	SUM(Total_Sales) AS Revenue,
+	LAG(SUM(Total_Sales)) OVER(
+		ORDER BY DATEPART(QUARTER, Order_Date), YEAR(Order_Date) ASC)
+	AS Prev_Qtr_Revenue
+FROM Global_sales
+GROUP BY YEAR(Order_Date),DATEPART(QUARTER, Order_Date)
+ORDER BY Years, Quarters;
+
+-- 24. Find Quarter-over-Quarter Revenue Growth %
+WITH QoQ_Rev_Growth AS
+(
+	SELECT 
+		YEAR(Order_Date) AS Years,
+		DATEPART(QUARTER, Order_Date) AS Qtr,
+		SUM(Total_Sales) AS Current_Qtr_Rev,
+		LAG(SUM(Total_Sales)) OVER(
+			ORDER BY YEAR(Order_Date),
+				DATEPART(QUARTER, Order_Date) ASC)
+		AS Prev_Qtr_Rev
+	FROM Global_sales
+	GROUP BY YEAR(Order_Date),DATEPART(QUARTER, Order_Date)
+)
+SELECT 
+	Years,
+	Qtr,
+	Current_Qtr_Rev,
+	Prev_Qtr_Rev,
+	ROUND((Current_Qtr_Rev - Prev_Qtr_Rev) * 100.00 /
+		Prev_Qtr_Rev, 2) AS Growth_Pert
+FROM QoQ_Rev_Growth;
+		
+-- 25. Find Previous Quarter Profit using LAG()
+SELECT 
+	YEAR(Order_Date) AS Years,
+	DATEPART(QUARTER, Order_Date) AS Quarters,
+	SUM(Profit) AS Profits,
+	LAG(SUM(Profit)) OVER(
+		ORDER BY DATEPART(QUARTER, Order_Date), YEAR(Order_Date) ASC)
+	AS Prev_Qtr_Profit
+FROM Global_sales
+GROUP BY YEAR(Order_Date),DATEPART(QUARTER, Order_Date)
+ORDER BY Years, Quarters;
+
+-- 26. Find Quarter-over-Quarter Profit Growth %
+WITH QoQ_Prof_Growth AS
+(
+	SELECT 
+		YEAR(Order_Date) AS Years,
+		DATEPART(QUARTER, Order_Date) AS Qtr,
+		SUM(Profit) AS Current_Qtr_Prof,
+		LAG(SUM(Profit)) OVER(
+			ORDER BY YEAR(Order_Date),
+				DATEPART(QUARTER, Order_Date) ASC)
+		AS Prev_Qtr_Prof
+	FROM Global_sales
+	GROUP BY YEAR(Order_Date),DATEPART(QUARTER, Order_Date)
+)
+SELECT 
+	Years,
+	Qtr,
+	Current_Qtr_Prof,
+	Prev_Qtr_Prof,
+	ROUND((Current_Qtr_Prof - Prev_Qtr_Prof) * 100.00 /
+		Prev_Qtr_Prof, 2) AS Growth_Pert
+FROM QoQ_Prof_Growth;
+
+-- 27. Find Quarter with Highest Revenue
+WITH Qtr_Highest_Revenue AS
+(
+	SELECT 
+		YEAR(Order_Date) AS Years,
+		DATEPART(QUARTER, Order_Date) AS Qtr,
+		SUM(Total_Sales) AS Current_Qtr_Rev,
+		LAG(SUM(Total_Sales)) OVER(
+			ORDER BY YEAR(Order_Date),
+				DATEPART(QUARTER, Order_Date) ASC)
+		AS Prev_Qtr_Rev
+	FROM Global_sales
+	GROUP BY YEAR(Order_Date),DATEPART(QUARTER, Order_Date)
+)
+SELECT TOP 1
+	Years,
+	Qtr,
+	Current_Qtr_Rev,
+	Prev_Qtr_Rev,
+	ROUND((Current_Qtr_Rev - Prev_Qtr_Rev) * 100.00 /
+		Prev_Qtr_Rev, 2) AS Growth_Pert
+FROM Qtr_Highest_Revenue
+ORDER BY Growth_Pert DESC;
+
+-- 28. Find Quarter with Highest Profit
+WITH Qtr_Highest_Profit AS
+(
+	SELECT 
+		YEAR(Order_Date) AS Years,
+		DATEPART(QUARTER, Order_Date) AS Qtr,
+		SUM(Profit) AS Current_Qtr_Prof,
+		LAG(SUM(Profit)) OVER(
+			ORDER BY YEAR(Order_Date),
+				DATEPART(QUARTER, Order_Date) ASC)
+		AS Prev_Qtr_Prof
+	FROM Global_sales
+	GROUP BY YEAR(Order_Date),DATEPART(QUARTER, Order_Date)
+)
+SELECT TOP 1
+	Years,
+	Qtr,
+	Current_Qtr_Prof,
+	Prev_Qtr_Prof,
+	ROUND((Current_Qtr_Prof - Prev_Qtr_Prof) * 100.00 /
+		Prev_Qtr_Prof, 2) AS Growth_Pert
+FROM Qtr_Highest_Profit
+ORDER BY Growth_Pert DESC;
+
+-- ==========================================================
+-- YEAR OVER YEAR (YoY) ANALYSIS
+-- ==========================================================
+
+-- 29. Find Yearly Revenue
+SELECT 
+	YEAR(Order_Date) AS Years,
+	SUM(Total_Sales) AS Revenue
+FROM Global_sales
+GROUP BY YEAR(Order_Date)
+ORDER BY Years ASC;
+
+-- 30. Find Previous Year Revenue using LAG()
+SELECT 
+	YEAR(Order_Date) AS Years,
+	SUM(Total_Sales) AS Revenue,
+	LAG(SUM(Total_Sales)) OVER(
+		ORDER BY YEAR(Order_Date) ASC) AS Prev_Year_Rev
+FROM Global_sales
+GROUP BY YEAR(Order_Date);
+
+-- 31. Find Year-over-Year Revenue Growth %
+WITH YoY_Rev_Growth AS
+(
+	SELECT 
+	YEAR(Order_Date) AS Years,
+	SUM(Total_Sales) AS Cur_Year_Revenue,
+	LAG(SUM(Total_Sales)) OVER(
+		ORDER BY YEAR(Order_Date) ASC) AS Prev_Year_Rev
+FROM Global_sales
+GROUP BY YEAR(Order_Date)
+)
+SELECT 
+	Years,
+	Cur_Year_Revenue,
+	Prev_Year_Rev,
+	ROUND((Cur_Year_Revenue - Prev_Year_Rev) * 100 /
+		Prev_Year_Rev, 2) AS Growht_Pert
+FROM YoY_Rev_Growth;
+
+-- 32. Find Yearly Profit
+SELECT 
+	YEAR(Order_Date) AS Years,
+	SUM(Profit) AS Profit
+FROM Global_sales
+GROUP BY YEAR(Order_Date)
+ORDER BY Years ASC;
+
+-- 33. Find Previous Year Profit using LAG()
+SELECT 
+	YEAR(Order_Date) AS Years,
+	SUM(Profit) AS Profit,
+	LAG(SUM(Profit)) OVER(
+		ORDER BY YEAR(Order_Date) ASC) AS Prev_Year_Prof
+FROM Global_sales
+GROUP BY YEAR(Order_Date);
+
+-- 34. Find Year-over-Year Profit Growth %
+WITH YoY_Rev_Growth AS
+(
+	SELECT 
+	YEAR(Order_Date) AS Years,
+	SUM(Profit) AS Cur_Year_Prof,
+	LAG(SUM(Profit)) OVER(
+		ORDER BY YEAR(Order_Date) ASC) AS Prev_Year_Prof
+FROM Global_sales
+GROUP BY YEAR(Order_Date)
+)
+SELECT 
+	Years,
+	Cur_Year_Prof,
+	Prev_Year_Prof,
+	ROUND((Cur_Year_Prof - Prev_Year_Prof) * 100 /
+		Prev_Year_Prof, 2) AS Growht_Pert
+FROM YoY_Rev_Growth;
+
