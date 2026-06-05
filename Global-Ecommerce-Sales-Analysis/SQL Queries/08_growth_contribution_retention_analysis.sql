@@ -491,3 +491,640 @@ SELECT
 		Prev_Year_Prof, 2) AS Growht_Pert
 FROM YoY_Rev_Growth;
 
+-- ==========================================================
+-- CONTRIBUTION ANALYSIS
+-- ==========================================================
+
+-- 35. Find Region Revenue Contribution %
+SELECT 
+	Region,
+	SUM(Total_Sales) AS Revenue,
+	ROUND(SUM(Total_Sales) * 100.00 /
+		SUM(SUM(Total_Sales)) OVER(), 2) 
+	AS Contribution_Pert
+FROM Global_sales
+GROUP BY Region
+ORDER BY Contribution_Pert DESC;
+
+-- 36. Find Product Revenue Contribution %
+SELECT 
+	Product_Name,
+	SUM(Total_Sales) AS Revenue,
+	ROUND(SUM(Total_Sales) * 100.00 /
+		SUM(SUM(Total_Sales)) OVER(), 2) 
+	AS Contribution_Pert
+FROM Global_sales
+GROUP BY Product_Name
+ORDER BY Contribution_Pert DESC;
+
+-- 37. Find Customer Revenue Contribution %
+SELECT 
+	Customer_Name,
+	SUM(Total_Sales) AS Revenue,
+	ROUND(SUM(Total_Sales) * 100.00 /
+		SUM(SUM(Total_Sales)) OVER(), 2) 
+	AS Contribution_Pert
+FROM Global_sales
+GROUP BY Customer_Name
+ORDER BY Contribution_Pert DESC;
+
+-- 38. Find Category Revenue Contribution %
+SELECT 
+	Product_Category,
+	SUM(Total_Sales) AS Revenue,
+	ROUND(SUM(Total_Sales) * 100.00 /
+		SUM(SUM(Total_Sales)) OVER(), 2) 
+	AS Contribution_Pert
+FROM Global_sales
+GROUP BY Product_Category
+ORDER BY Contribution_Pert DESC;
+
+-- 39. Find Regions Contributing More Than 20% Revenue
+WITH Region_Cont_MT20 AS
+(
+	SELECT 
+	Region,
+	SUM(Total_Sales) AS Revenue,
+	ROUND(SUM(Total_Sales) * 100.00 /
+		SUM(SUM(Total_Sales)) OVER(), 2) 
+	AS Contribution_Pert
+FROM Global_sales
+GROUP BY Region
+)
+SELECT * 
+FROM Region_Cont_MT20
+WHERE Contribution_Pert > 20
+ORDER BY Contribution_Pert DESC;
+
+-- 40. Find Products Contributing More Than 10% Revenue
+WITH Prod_Cont_MT10 AS
+(
+	SELECT 
+	Product_Name,
+	SUM(Total_Sales) AS Revenue,
+	ROUND(SUM(Total_Sales) * 100.00 /
+		SUM(SUM(Total_Sales)) OVER(), 2) 
+	AS Contribution_Pert
+FROM Global_sales
+GROUP BY Product_Name
+)
+SELECT *
+FROM Prod_Cont_MT10
+WHERE Contribution_Pert > 10
+ORDER BY Contribution_Pert DESC;
+
+-- 41. Find Top 5 Customers by Revenue Contribution %
+SELECT TOP 5 
+	Customer_Name,
+	SUM(Total_Sales) AS Revenue,
+	ROUND(SUM(Total_Sales) * 100.00 /
+		SUM(SUM(Total_Sales)) OVER(), 2) 
+	AS Contribution_Pert
+FROM Global_sales
+GROUP BY Customer_Name
+ORDER BY Contribution_Pert DESC;
+
+
+-- ==========================================================
+-- CUSTOMER RETENTION ANALYSIS
+-- ==========================================================
+
+-- 42. Find Repeat Customers (More Than One Order)
+SELECT 
+	Customer_Name,
+	COUNT(DISTINCT Order_ID) AS Counts
+FROM Global_sales
+GROUP BY Customer_Name
+HAVING COUNT(DISTINCT Order_ID) > 1;
+
+-- 43. Find Customers With Only One Order
+SELECT 
+	Customer_Name,
+	COUNT(DISTINCT Order_ID) AS Counts
+FROM Global_sales
+GROUP BY Customer_Name
+HAVING COUNT(DISTINCT Order_ID) = 1;
+
+-- 44. Find Customer First Purchase Date
+SELECT DISTINCT
+	Customer_Name,
+	MIN(Order_Date) AS  First_Purchase_Date
+FROM Global_sales
+GROUP BY Customer_Name, Order_Date;
+
+-- 45. Find Customer Last Purchase Date
+SELECT 
+	Customer_Name,
+	MAX(Order_Date) AS  Last_Purchase_Date
+FROM Global_sales
+GROUP BY Customer_Name, Order_Date;
+
+-- 46. Find Customer Lifetime Value (CLV)
+SELECT 
+	Customer_Name,
+	COUNT(DISTINCT Order_ID) AS Counts,
+	SUM(Total_Sales) AS Revenue,
+	SUM(Profit) AS CLV
+FROM Global_sales
+GROUP BY Customer_Name
+ORDER BY CLV DESC;
+
+-- 47. Find Customers Ordering Across Multiple Months
+SELECT 
+	Customer_Name,
+	COUNT(DISTINCT 
+		FORMAT(Order_Date, 'YYYY-MM'))
+	AS Mul_Months_Ordered
+FROM Global_sales
+GROUP BY Customer_Name
+HAVING COUNT(DISTINCT 
+		FORMAT(Order_Date, 'YYYY-MM')) > 1
+ORDER BY Mul_Months_Ordered DESC;
+
+-- 48. Find Customers Inactive For More Than 90 Days
+SELECT 
+	Customer_Name,
+	MAX(Order_Date) AS Last_Purchase_Date,
+	DATEDIFF(DAY, MAX(Order_Date), GETDATE())
+	AS Day_Diff
+FROM Global_sales
+GROUP BY Customer_Name
+HAVING DATEDIFF(DAY, MAX(Order_Date), GETDATE()) > 90
+ORDER BY Day_Diff DESC;
+
+-- 49. Find Top 10 Customers By CLV
+WITH Top_10s_Cust AS
+(
+SELECT 
+	Customer_Name,
+	COUNT(DISTINCT Order_ID) AS Counts,
+	SUM(Total_Sales) AS Revenue,
+	SUM(Profit) AS CLV,
+	ROW_NUMBER() OVER(
+		ORDER BY SUM(Profit) DESC) AS TOP_10s
+FROM Global_sales
+GROUP BY Customer_Name
+)
+SELECT *
+FROM Top_10s_Cust
+WHERE TOP_10s <= 10;
+
+-- ==========================================================
+-- WINDOW FUNCTION PRACTICE
+-- ==========================================================
+
+-- 50. Assign ROW_NUMBER() to Customers by Revenue
+SELECT 
+	Customer_Name,
+	SUM(Total_Sales) AS Revenue,
+	ROW_NUMBER() OVER(
+		ORDER BY SUM(Total_Sales) DESC)
+	AS RN
+FROM Global_sales
+GROUP BY Customer_Name;
+
+-- 51. Assign RANK() to Customers by Revenue
+SELECT 
+	Customer_Name,
+	SUM(Total_Sales) AS Revenue,
+	RANK() OVER(
+		ORDER BY SUM(Total_Sales) DESC)
+	AS RANKS
+FROM Global_sales
+GROUP BY Customer_Name;
+
+-- 52. Assign DENSE_RANK() to Customers by Revenue
+SELECT 
+	Customer_Name,
+	SUM(Total_Sales) AS Revenue,
+	DENSE_RANK() OVER(
+		ORDER BY SUM(Total_Sales) DESC)
+	AS RANKS
+FROM Global_sales
+GROUP BY Customer_Name;
+
+-- 53. Find Top 5 Customers by Revenue using RANK()
+WITH Top_5s_Cust AS
+(
+SELECT 
+	Customer_Name,
+	SUM(Total_Sales) AS Revenue,
+	RANK() OVER(
+		ORDER BY SUM(Profit) DESC) AS TOP_5s
+FROM Global_sales
+GROUP BY Customer_Name
+)
+SELECT *
+FROM Top_5s_Cust
+WHERE TOP_5s <= 5;
+
+-- 54. Find Bottom 5 Customers by Revenue
+WITH Bottom_5s_Cust AS
+(
+SELECT 
+	Customer_Name,
+	SUM(Total_Sales) AS Revenue,
+	RANK() OVER(
+		ORDER BY SUM(Profit) ASC) AS BOT_5s
+FROM Global_sales
+GROUP BY Customer_Name
+)
+SELECT *
+FROM Bottom_5s_Cust
+WHERE BOT_5s <= 5;
+
+-- 55. Assign ROW_NUMBER() to Products Within Each Category
+SELECT 
+	Product_Category,
+	Product_Name,
+	SUM(Total_Sales) AS Revenue,
+	ROW_NUMBER() OVER(
+		PARTITION BY Product_Category
+		ORDER BY SUM(Total_Sales) DESC) AS RN
+FROM Global_sales
+GROUP BY Product_Category,
+	Product_Name;
+
+-- 56. Find Top Product in Each Category
+WITH Top_Prod_Cat AS
+(
+SELECT 
+	Product_Category,
+	Product_Name,
+	SUM(Total_Sales) AS Revenue,
+	ROW_NUMBER() OVER(
+		PARTITION BY Product_Category
+		ORDER BY SUM(Total_Sales) DESC) AS RN
+FROM Global_sales
+GROUP BY Product_Category,
+	Product_Name
+)
+SELECT * 
+FROM Top_Prod_Cat
+WHERE RN = 1;
+
+-- 57. Find Top Customer in Each Region
+WITH Top_Cust_Region AS
+(
+SELECT 
+	Customer_Name,
+	Region,
+	SUM(Total_Sales) AS Revenue,
+	ROW_NUMBER() OVER(
+		PARTITION BY Region
+		ORDER BY SUM(Total_Sales) DESC) AS RN
+FROM Global_sales
+GROUP BY Customer_Name,
+	Region
+)
+SELECT * 
+FROM Top_Cust_Region
+WHERE RN = 1;
+
+-- 58. Find Bottom Customer in Each Region
+WITH Top_Cust_Region AS
+(
+SELECT 
+	Customer_Name,
+	Region,
+	SUM(Total_Sales) AS Revenue,
+	ROW_NUMBER() OVER(
+		PARTITION BY Region
+		ORDER BY SUM(Total_Sales) ASC) AS RN
+FROM Global_sales
+GROUP BY Customer_Name,
+	Region
+)
+SELECT * 
+FROM Top_Cust_Region
+WHERE RN = 1;
+
+-- 59. Find Running Revenue using SUM() OVER()
+WITH Running_Revenue AS
+(
+SELECT 
+	YEAR(Order_Date) AS Years,
+	MONTH(Order_Date) AS Months,
+	SUM(Total_Sales) AS Revenue
+FROM Global_sales
+GROUP BY YEAR(Order_Date), MONTH(Order_Date)
+)
+SELECT 
+	Years,
+	Months,
+	Revenue,
+	(SUM(Revenue) OVER(
+		ORDER BY Years, Months ASC)) AS Running_revenue
+FROM Running_Revenue
+ORDER BY Years, Months ASC;
+
+-- 60. Find Running Profit using SUM() OVER()
+WITH Running_Profits AS
+(
+SELECT 
+	YEAR(Order_Date) AS Years,
+	MONTH(Order_Date) AS Months,
+	SUM(Profit) AS Profits
+FROM Global_sales
+GROUP BY YEAR(Order_Date), MONTH(Order_Date)
+)
+SELECT 
+	Years,
+	Months,
+	Profits,
+	(SUM(Profits) OVER(
+		ORDER BY Years, Months ASC)) AS Running_Profits
+FROM Running_Profits
+ORDER BY Years, Months ASC;
+
+-- 61. Find Running Order Count
+WITH Running_Ord_Cnt AS
+(
+SELECT 
+	YEAR(Order_Date) AS Years,
+	MONTH(Order_Date) AS Months,
+	COUNT(DISTINCT Order_ID) AS Counts
+FROM Global_sales
+GROUP BY YEAR(Order_Date), MONTH(Order_Date)
+)
+SELECT 
+	Years,
+	Months,
+	Counts,
+	(SUM(Counts) OVER(
+		ORDER BY Years, Months ASC)) AS Running_Ord_Cnt
+FROM Running_Ord_Cnt
+ORDER BY Years, Months ASC;
+
+-- 62. Find Running Quantity Sold
+WITH Running_Qtn_Sold AS
+(
+SELECT 
+	YEAR(Order_Date) AS Years,
+	MONTH(Order_Date) AS Months,
+	SUM(Quantity) AS Qtn
+FROM Global_sales
+GROUP BY YEAR(Order_Date), MONTH(Order_Date)
+)
+SELECT 
+	Years,
+	Months,
+	Qtn,
+	(SUM(Qtn) OVER(
+		ORDER BY Years, Months ASC)) AS Running_Qtn_Sold
+FROM Running_Qtn_Sold
+ORDER BY Years, Months ASC;
+
+
+-- 63. Find Previous Customer Revenue using LAG()
+SELECT 
+	Customer_Name,
+	SUM(Total_Sales) AS Cur_Revenue,
+	LAG(SUM(Total_Sales)) OVER(
+	 ORDER BY SUM(Total_Sales) DESC) AS Prev_Cust_Rev
+FROM Global_sales
+GROUP BY Customer_Name
+ORDER BY Prev_Cust_Rev DESC;
+
+WITH Monthly_Customer_Revenue AS
+(
+    SELECT
+        Customer_Name,
+        YEAR(Order_Date) AS Years,
+        MONTH(Order_Date) AS Months,
+        SUM(Total_Sales) AS Revenue
+    FROM Global_sales
+    GROUP BY
+        Customer_Name,
+        YEAR(Order_Date),
+        MONTH(Order_Date)
+)
+
+SELECT
+    Customer_Name,
+    Years,
+    Months,
+    Revenue,
+    LAG(Revenue) OVER(
+        PARTITION BY Customer_Name
+        ORDER BY Years, Months
+    ) AS Prev_Month_Revenue
+FROM Monthly_Customer_Revenue;
+
+-- 64. Find Next Customer Revenue using LEAD
+SELECT 
+	Customer_Name,
+	SUM(Total_Sales) AS Cur_Revenue,
+	LEAD(SUM(Total_Sales)) OVER(
+	 ORDER BY SUM(Total_Sales) DESC) AS Next_Cust_Rev
+FROM Global_sales
+GROUP BY Customer_Name
+ORDER BY Next_Cust_Rev DESC;
+
+WITH Monthly_Customer_Revenue AS
+(
+    SELECT
+        Customer_Name,
+        YEAR(Order_Date) AS Years,
+        MONTH(Order_Date) AS Months,
+        SUM(Total_Sales) AS Revenue
+    FROM Global_sales
+    GROUP BY
+        Customer_Name,
+        YEAR(Order_Date),
+        MONTH(Order_Date)
+)
+
+SELECT
+    Customer_Name,
+    Years,
+    Months,
+    Revenue,
+    LEAD(Revenue) OVER(
+        PARTITION BY Customer_Name
+        ORDER BY Years, Months
+    ) AS Next_Month_Revenue
+FROM Monthly_Customer_Revenue;
+
+-- ==========================================================
+-- ADVANCED BUSINESS ANALYSIS
+-- ==========================================================
+
+-- 65. Find Top 3 Products in Each Region
+WITH TOP_3_Prod AS 
+(
+	SELECT 
+		Region,
+		Product_Name,
+		SUM(Total_Sales) AS Revenue,
+		RANK() OVER(
+			PARTITION BY Region 
+			ORDER BY SUM(Total_Sales) DESC) AS Top_3s
+	FROM Global_sales
+	GROUP BY Region,
+		Product_Name
+)
+SELECT *
+FROM TOP_3_Prod
+WHERE Top_3s < =3;
+
+
+-- 66. Find Top 3 Customers in Each Region
+WITH TOP_3_Cust AS 
+(
+	SELECT 
+		Region,
+		Customer_Name,
+		SUM(Total_Sales) AS Revenue,
+		RANK() OVER(
+			PARTITION BY Region 
+			ORDER BY SUM(Total_Sales) DESC) AS Top_3s
+	FROM Global_sales
+	GROUP BY Region,
+		Customer_Name
+)
+SELECT *
+FROM TOP_3_Cust
+WHERE Top_3s < =3;
+
+-- 67. Find Most Profitable Product in Each Category
+WITH Most_Prof_Prod AS 
+(
+	SELECT 
+		Product_Category,
+		Product_Name,
+		SUM(Profit) AS Profits,
+		RANK() OVER(
+			PARTITION BY Product_Category 
+			ORDER BY SUM(Profit) DESC) AS Top_3s
+	FROM Global_sales
+	GROUP BY Product_Category,
+		Product_Name
+)
+SELECT *
+FROM Most_Prof_Prod
+WHERE Top_3s < =3;
+
+-- 68. Find Least Profitable Product in Each Category
+WITH Most_Prof_Prod AS 
+(
+	SELECT 
+		Product_Category,
+		Product_Name,
+		SUM(Profit) AS Profits,
+		RANK() OVER(
+			PARTITION BY Product_Category 
+			ORDER BY SUM(Profit) ASC) AS Top_3s
+	FROM Global_sales
+	GROUP BY Product_Category,
+		Product_Name
+)
+SELECT *
+FROM Most_Prof_Prod
+WHERE Top_3s < =3;
+
+-- 69. Find Highest Revenue Generating Region
+SELECT TOP 1
+	Region,
+	SUM(Total_Sales) AS Revenue
+FROM Global_sales
+GROUP BY Region
+ORDER BY Revenue DESC;
+
+-- 70. Find Lowest Revenue Generating Region
+SELECT TOP 1
+	Region,
+	SUM(Total_Sales) AS Revenue
+FROM Global_sales
+GROUP BY Region
+ORDER BY Revenue ASC;
+
+-- 71. Find Most Valuable Customer in Each Region
+WITH MVC AS 
+(
+	SELECT 
+		Region,
+		Customer_Name,
+		SUM(Total_Sales) AS Revenue,
+		RANK() OVER(
+			PARTITION BY Region 
+			ORDER BY SUM(Total_Sales) DESC) AS Top_Cust
+	FROM Global_sales
+	GROUP BY Region,
+		Customer_Name
+)
+SELECT *
+FROM MVC
+WHERE Top_Cust = 1;
+
+-- 72. Find Region with Highest Profit Margin
+SELECT TOP 1
+	Region,
+	SUM(Total_Sales) AS Reveneu,
+	SUM(Profit) AS Profits,
+	ROUND(SUM(Total_Sales) * 100.00/
+		SUM(Profit), 2) AS Prof_Margin
+FROM Global_sales
+GROUP BY Region
+ORDER BY Prof_Margin DESC;
+
+-- 73. Find Category with Highest Profit Margin
+SELECT TOP 1
+	Product_Category,
+	SUM(Total_Sales) AS Reveneu,
+	SUM(Profit) AS Profits,
+	ROUND(SUM(Total_Sales) * 100.00/
+		SUM(Profit), 2) AS Prof_Margin
+FROM Global_sales
+GROUP BY Product_Category
+ORDER BY Prof_Margin DESC;
+
+-- 74. Find Customer Segment Contributing Maximum Revenue
+SELECT TOP 1
+	Customer_Segment,
+	SUM(Total_Sales) AS Revenue
+FROM Global_sales
+GROUP BY Customer_Segment
+ORDER BY Revenue DESC;
+
+-- 75. Find Revenue Trend Over Time Using Running Totals
+WITH Rev_ToT AS 
+(
+	SELECT
+		MONTH(Order_Date) AS Months,
+		YEAR(Order_Date) AS Years,
+		SUM(Total_Sales) AS Revenue
+	FROM Global_sales
+	GROUP BY YEAR(Order_Date),
+		MONTH(Order_Date)
+)
+SELECT 
+	Years,
+	Months,
+	Revenue,
+	SUM(Revenue) OVER(
+		ORDER BY Years, Months) 
+	AS Running_Totals
+FROM Rev_ToT
+ORDER BY Years, Months;
+
+WITH Rev_ToT AS 
+(
+	SELECT
+		MONTH(Order_Date) AS Months,
+		YEAR(Order_Date) AS Years,
+		SUM(Total_Sales) AS Revenue
+	FROM Global_sales
+	GROUP BY YEAR(Order_Date),
+		MONTH(Order_Date)
+)
+SELECT 
+	Years,
+	Months,
+	Revenue,
+	SUM(Revenue) OVER(
+		ORDER BY Years, Months) 
+	AS Running_Totals
+FROM Rev_ToT
+WHERE Years = 2023
+ORDER BY Years, Months;
