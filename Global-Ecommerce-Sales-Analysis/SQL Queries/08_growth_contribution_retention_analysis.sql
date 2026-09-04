@@ -30,6 +30,12 @@ DATENAME(MONTH, Order_Date),
 DATEPART(QUARTER, Order_Date);
 
 -- 4. Find the number of days between Order_Date and Ship_Date
+SELECT 
+	Order_Date,
+	Ship_Date,
+	DATEDIFF(DAY, Order_Date, Ship_Date) AS No_Of_Days
+FROM Global_Sales
+GROUP BY Order_Date;
 
 -- 5. Find expected delivery date by adding 30 days to Order_Date
 SELECT 
